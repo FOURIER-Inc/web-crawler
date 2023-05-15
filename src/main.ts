@@ -2,24 +2,25 @@ import {JSDOM} from 'jsdom';
 import 'node:url';
 import { stringify } from "csv-stringify/sync";
 import fs from 'node:fs';
-import path from 'node:path';
+
+type ranges = 'same-origin' | 'same-host' | 'same-domain' | 'any';
 
 const searchedUrls = new Map();
 
 const rootUrl = process.argv[2];
 // same-origin, same-host, same-domain, any
-const range = 'same-origin';
+const range: ranges = 'same-origin';
 const maxDepth = 3;
 
 let maxRealDepth = 0;
 
-function removeSubDomain(hostname) {
+function removeSubDomain(hostname: string) {
     const split = hostname.split('.');
     if (split.length <= 2) return hostname;
     return split.slice(1).join('.');
 }
 
-function isInnerOfSearchRange(url) {
+function isInnerOfSearchRange(url: URL) {
     switch (range) {
         case 'same-origin':
             return url.origin === new URL(rootUrl).origin;
@@ -33,11 +34,11 @@ function isInnerOfSearchRange(url) {
     }
 }
 
-function isPage(url) {
+function isPage(url: URL) {
     return url.pathname.match(/^(?!.*(apng|avif|gif|jpg|jpeg|png|svg|webp|mp3|mp4|bmp|ico|tiff|docx|pdf|txt)).*$/g);
 }
 
-function collectData(url, dom) {
+function collectData(url: string, dom: JSDOM) {
     let obj = new URL(url);
     let paths = obj.pathname.split('/').filter(p => p !== '');
 
@@ -48,7 +49,7 @@ function collectData(url, dom) {
     };
 }
 
-function convertToRowData(dataset) {
+function convertToRowData(dataset: any[]) {
     let realMaxDepth = 0;
     dataset.forEach(d => {
         if (d.paths.length > realMaxDepth) realMaxDepth = d.paths.length;
@@ -66,7 +67,7 @@ function convertToRowData(dataset) {
     })
 }
 
-async function search(fetchUrl) {
+async function search(fetchUrl: string) {
     console.log(`searching: ${fetchUrl}`);
     const response = await fetch(fetchUrl);
     const dom = new JSDOM(await response.text());
@@ -90,7 +91,8 @@ async function search(fetchUrl) {
                 }
             }
         })
-        .filter(url => url !== undefined && (url.protocol === 'https:' || url.protocol === 'http:'));
+        .filter((u): u is URL => u !== undefined)
+        .filter(url => url.protocol === 'https:' || url.protocol === 'http:');
 
     for (const url of newUrls) {
         if (searchedUrls.has(url.href) || !isInnerOfSearchRange(url) || !isPage(url)) continue;
