@@ -11,7 +11,8 @@
   "license": "MIT",
   "dependencies": {
     "csv-stringify": "^6.4.0",
-    "jsdom": "^22.0.0"
+    "jsdom": "^22.0.0",
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
     "@types/jsdom": "^21.1.1",

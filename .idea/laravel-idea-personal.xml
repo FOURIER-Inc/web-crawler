@@ -4,6 +4,7 @@
     <option name="flags">
       <map>
         <entry key="Init.showEmptyHelperCodeNotification" value="false" />
+        <entry key="LaravelIdeaSettings.switchedToPackageDevelopment" value="true" />
       </map>
     </option>
   </component>

@@ -2,6 +2,7 @@ import {JSDOM} from 'jsdom';
 import 'node:url';
 import { stringify } from "csv-stringify/sync";
 import fs from 'node:fs';
+import {sqlite3} from "sqlite3";
 
 type ranges = 'same-origin' | 'same-host' | 'same-domain' | 'any';
 
@@ -13,6 +14,35 @@ const range: ranges = 'same-origin';
 const maxDepth = 3;
 
 let maxRealDepth = 0;
+
+const db = new sqlite3.Database('db.sqlite3');
+
+type PathId = number;
+type LinkId = number;
+
+interface Path {
+    id: PathId;
+    url: URL;
+    title: string|null;
+}
+
+interface PathComposite {
+    path: Path;
+    children: PathComposite[];
+}
+
+interface Link {
+    id: LinkId;
+    from: PathId;
+    to: PathId;
+}
+
+db.serialize(() => {
+    db.run("CREATE TABLE paths (id INTEGER PRIMARY KEY, url TEXT, title TEXT);");
+    db.run("CREATE TABLE links (id INTEGER PRIMARY KEY, from INTEGER, to INTEGER);");
+
+    const stmt = db.prepare("INSERT INTO paths VALUES (?, ?, ?);");
+});
 
 function removeSubDomain(hostname: string) {
     const split = hostname.split('.');
